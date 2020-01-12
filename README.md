@@ -4,7 +4,7 @@ C# Shellcode Carving based off of [WoollyMammoth](https://github.com/ins1gn1a/Wo
 ![](https://img.shields.io/maintenance/yes/2021.svg)
 [![GitHub pull-requests](https://img.shields.io/github/issues-pr/ins1gn1a/ShellcodeCarver.svg)](https://GitHub.com/ins1gn1a/ShellcodeCarver/pulls/)
 [![GitHub issues](https://img.shields.io/github/issues/ins1gn1a/ShellcodeCarver)](https://github.com/ins1gn1a/ShellcodeCarver/issues)
-[![GitHub license](https://img.shields.io/github/license/ins1gn1a/ShellcodeCarver)](https://github.com/ins1gn1a/ShellcodeCarver/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/ins1gn1a/ShellcodeCarver.svg)](https://github.com/ins1gn1a/ShellcodeCarver/blob/master/LICENSE)
 
 ## Build
 In the root directory use the relevant dotnet `RuntimeIdentifiers` value for x86 or x64:
