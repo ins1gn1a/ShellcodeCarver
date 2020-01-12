@@ -34,4 +34,4 @@ Options:
   ```
   
   ## Packages
-  (Iced by 0xd4d)[https://github.com/0xd4d/iced]
+  [Iced by 0xd4d](https://github.com/0xd4d/iced)
