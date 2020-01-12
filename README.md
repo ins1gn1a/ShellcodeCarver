@@ -16,6 +16,8 @@ dotnet build -r win10-x86 -c "Release"
 dotnet build -r win10-x64 -c "Release"
 ```
 
+## Releases
+Obtain the latest releases for x86 or x64 [here](https://github.com/ins1gn1a/ShellcodeCarver/releases/latest).
 
 ## Usage
 
