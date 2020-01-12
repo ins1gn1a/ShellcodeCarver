@@ -8,6 +8,17 @@ C# Shellcode Carving based off of [WoollyMammoth](https://github.com/ins1gn1a/Wo
 [![GitHub stars](https://img.shields.io/github/stars/ins1gn1a/ShellcodeCarver)](https://github.com/ins1gn1a/ShellcodeCarver/stargazers)
 [![GitHub license](https://img.shields.io/github/license/ins1gn1a/ShellcodeCarver)](https://github.com/ins1gn1a/ShellcodeCarver/blob/master/LICENSE)
 
+## Build
+In the root directory use the relevant dotnet `RuntimeIdentifiers` value for x86 or x64:
+```
+# 32-bit
+dotnet build -r win10-x86
+
+# 64-bit
+dotnet build -r win10-x64
+```
+
+
 ## Usage
 
 ```
