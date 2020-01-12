@@ -10,6 +10,7 @@ namespace ShellcodeCarver
 
         static void Main(string[] args)
         {
+            // Set default badChars if no arg entered
             int[] badChars = {0x00, 0x0a, 0x0d, 0x2f, 0x3a, 0x3f, 0x40, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
                0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96,
                0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f, 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5,
@@ -20,6 +21,7 @@ namespace ShellcodeCarver
                0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0,
                0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
 
+            // Set default all available character space hex list
             int[] allChars = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
               0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
               0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
@@ -45,26 +47,46 @@ namespace ShellcodeCarver
               0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc,
               0xfd, 0xfe, 0xff };
 
+            // Pre initialise List for available characters
             List<int> availableChars = new List<int>();
 
+            // Handle command line args
             var cmdArgs = new CommandLineApplication();
             CommandOption argSc = cmdArgs.Option("-s | --shellcode <value>", "Enter Shellcode as opcode format (e.g. \\x64\\x01)", CommandOptionType.SingleValue);
             CommandOption argEspStart = cmdArgs.Option("-e | --esp-start <value>", "Enter ESP address value at start of carved shellcode", CommandOptionType.SingleValue);
             CommandOption argEspEnd = cmdArgs.Option("-d | --esp-end <value>", "Enter stack address value to write carved shellcode (allow for sufficient space for carved shellcode side)", CommandOptionType.SingleValue);
+            CommandOption argBadChars = cmdArgs.Option("-b | --bad-chars <value>", "Enter the bad characters withg the hex format separated by spaces, e.g. \"0x00 0x01 0xff\" or \"00 01 ff\"", CommandOptionType.SingleValue);
             cmdArgs.HelpOption("-? | -h | --help");
-
             cmdArgs.Execute(args);
 
-            if (!(argSc.HasValue() || argEspStart.HasValue() || argEspEnd.HasValue()))
+            // Write Help if -h or not all required options entered
+            if (args.Contains("-h"))
+            {
+                System.Environment.Exit(0);
+            }
+            else if (!(argSc.HasValue() || argEspStart.HasValue() || argEspEnd.HasValue()))
             {
                 cmdArgs.ShowHelp();
                 System.Environment.Exit(0);
             }
-            string sc;
-            sc = argSc.Value();
+
+            // Parse badChar args to int[]
+            if (argBadChars.HasValue())
+            {
+                var results = new List<int>();
+                foreach (string x in argBadChars.Value().Replace("0x", "").Split(" ")){
+                    int y = Convert.ToInt32(x, 16);
+                    results.Add(y);
+                }
+                badChars = results.ToArray();
+            }
+
+            // Set arg variables
+            string sc = argSc.Value();
             string startEsp = argEspStart.Value();
             string destEsp = argEspEnd.Value();
 
+            // Determine available chars from badchars
             foreach (var b in allChars)
             {
                 int pos = Array.IndexOf(badChars,b);
@@ -74,14 +96,20 @@ namespace ShellcodeCarver
                 }
             }
 
+            // AND XOR opcodes
             Console.WriteLine("\"\\x25\\x4a\\x4d\\x4e\\x55\"");
             Console.WriteLine("\"\\x25\\x35\\x32\\x31\\x2a\"");
             Console.WriteLine("\"\\x54\\x58\"");
+
+            // Convert Carve Value for ESP Destination
             int diffEsp = Convert.ToInt32(Convert.ToInt64(destEsp, 16) - Convert.ToInt32(startEsp, 16));
             var diff = (4294967295 - diffEsp).ToString("X");
             CarveEncode(diff, availableChars.ToArray());
+
+            // PUSHPOP
             Console.WriteLine("\"\\x50\\x5c\"");
 
+            // Reverse shellcode for Carving values
             string reversedShellcode = ReverseHexString(sc);
             string[] reversedShellcodeList;
             double partSize = 8;
@@ -90,6 +118,8 @@ namespace ShellcodeCarver
                 .ToLookup(c => Math.Floor(k++ / partSize))
                 .Select(e => new String(e.ToArray()));
             reversedShellcodeList = output.ToArray();
+
+            // Loop through each 4 bytes of reversed shellcode
             foreach (string op in reversedShellcodeList)
             {
                 
@@ -99,9 +129,12 @@ namespace ShellcodeCarver
                     revScHex = revScHex.Substring(revScHex.Length - 8,8);
                 }
 
+                // Carve shellcode and prefix with AND XOR opcodes
                 Console.WriteLine("\"\\x25\\x4a\\x4d\\x4e\\x55\"");
                 Console.WriteLine("\"\\x25\\x35\\x32\\x31\\x2a\"");
                 CarveEncode(revScHex, availableChars.ToArray());
+
+                // PUSH
                 Console.WriteLine("\"\\x50\"");
             }
 
@@ -282,6 +315,7 @@ namespace ShellcodeCarver
                 }
             }
 
+            // Write SUB carved shellcode
             Console.WriteLine("\"\\x2d" + (padAndStrip(b4) + padAndStrip(b3) + padAndStrip(b2) + padAndStrip(b1))+ "\"");
             Console.WriteLine("\"\\x2d" + (padAndStrip(c4) + padAndStrip(c3) + padAndStrip(c2) + padAndStrip(c1)) + "\"");
             Console.WriteLine("\"\\x2d" + (padAndStrip(d4) + padAndStrip(d3) + padAndStrip(d2) + padAndStrip(d1)) + "\"");
