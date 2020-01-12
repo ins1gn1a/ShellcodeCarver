@@ -1,5 +1,5 @@
 # ShellcodeCarver
-C# Shellcode Carving based off of [WoollyMammoth](https://github.com/ins1gn1a/WoollyMammoth) toolset.
+C# Shellcode Carving tool based off of [WoollyMammoth](https://github.com/ins1gn1a/WoollyMammoth) toolset.
 
 ![](https://img.shields.io/maintenance/yes/2021.svg)
 [![GitHub pull-requests](https://img.shields.io/github/issues-pr/ins1gn1a/ShellcodeCarver.svg)](https://GitHub.com/ins1gn1a/ShellcodeCarver/pulls/)
