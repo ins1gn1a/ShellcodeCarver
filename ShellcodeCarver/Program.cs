@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.CommandLineUtils;
+﻿using Iced.Intel;
+using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace ShellcodeCarver
 {
@@ -10,6 +12,7 @@ namespace ShellcodeCarver
 
         static void Main(string[] args)
         {
+            
             // Set default badChars if no arg entered
             int[] badChars = {0x00, 0x0a, 0x0d, 0x2f, 0x3a, 0x3f, 0x40, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
                0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96,
@@ -49,6 +52,8 @@ namespace ShellcodeCarver
 
             // Pre initialise List for available characters
             List<int> availableChars = new List<int>();
+
+            List<string> carvedCode = new List<string>();
 
             // Handle command line args
             var cmdArgs = new CommandLineApplication();
@@ -110,24 +115,12 @@ namespace ShellcodeCarver
                 Console.WriteLine("[!] Prepending NOPs to align Shellcode\n");
             }
 
-            Console.WriteLine("[i] Start ESP: \t\t" + startEsp);
-            Console.WriteLine("[i] Destination ESP: \t" + destEsp);
-            Console.WriteLine("[i] Shellcode: \t\t" + sc + "\n");
 
-            Console.WriteLine("[+] Carved Shellcode:\n");
-
-            if (formatVar)
-            {
-                if (argFormat.Value().ToLower() == "p" || argFormat.Value().ToLower() == "python")
-                {
-                    Console.WriteLine("carvedShellcode = (");
-                }
-            }
 
             // AND XOR opcodes
-            Console.WriteLine("\"\\x25\\x4a\\x4d\\x4e\\x55\"");
-            Console.WriteLine("\"\\x25\\x35\\x32\\x31\\x2a\"");
-            Console.WriteLine("\"\\x54\\x58\"");
+            carvedCode.Add("\\x25\\x4a\\x4d\\x4e\\x55");
+            carvedCode.Add("\\x25\\x35\\x32\\x31\\x2a");
+            carvedCode.Add("\\x54\\x58");
 
             // Convert Carve Value for ESP Destination
             int diffEsp = Convert.ToInt32(Convert.ToInt64(destEsp, 16) - Convert.ToInt32(startEsp, 16));
@@ -135,7 +128,7 @@ namespace ShellcodeCarver
             CarveEncode(diff, availableChars.ToArray());
 
             // PUSHPOP
-            Console.WriteLine("\"\\x50\\x5c\"");
+            carvedCode.Add("\\x50\\x5c");
 
             
             // Reverse shellcode for Carving values
@@ -147,6 +140,8 @@ namespace ShellcodeCarver
                 .ToLookup(c => Math.Floor(k++ / partSize))
                 .Select(e => new String(e.ToArray()));
             reversedShellcodeList = output.ToArray();
+
+            string sub1, sub2, sub3;
             
             // Loop through each 4 bytes of reversed shellcode
             foreach (string op in reversedShellcodeList)
@@ -159,21 +154,53 @@ namespace ShellcodeCarver
                 }
 
                 // Carve shellcode and prefix with AND XOR opcodes
-                Console.WriteLine("\"\\x25\\x4a\\x4d\\x4e\\x55\"");
-                Console.WriteLine("\"\\x25\\x35\\x32\\x31\\x2a\"");
-                CarveEncode(revScHex, availableChars.ToArray());
-
+                carvedCode.Add("\\x25\\x4a\\x4d\\x4e\\x55");
+                carvedCode.Add("\\x25\\x35\\x32\\x31\\x2a");
+                string[] carvedOutput = CarveEncode(revScHex, availableChars.ToArray());
+                carvedCode.Add(carvedOutput[0]);
+                carvedCode.Add(carvedOutput[1]);
+                carvedCode.Add(carvedOutput[2]);
                 // PUSH
-                Console.WriteLine("\"\\x50\"");
+                carvedCode.Add("\\x50");
             }
+
+            Console.WriteLine("[i] Start ESP: \t\t" + startEsp);
+            Console.WriteLine("[i] Destination ESP: \t" + destEsp);
+            Console.WriteLine("[i] Shellcode: \t\t" + sc + "\n");
 
             if (formatVar)
             {
+                
                 if (argFormat.Value().ToLower() == "p" || argFormat.Value().ToLower() == "python")
                 {
+                    Console.WriteLine("[+] Carved Shellcode (Python):\n");
+                    Console.WriteLine("shellcode = (");
+                    foreach (string outFormat in carvedCode)
+                    {
+                        Console.WriteLine(outFormat);
+                    }
                     Console.WriteLine(")");
                 }
+                else if (argFormat.Value().ToLower() == "n" || argFormat.Value().ToLower() == "nasm" || argFormat.Value().ToLower() == "a" || argFormat.Value().ToLower() == "asm")
+                {
+                    Console.WriteLine("[+] Carved Shellcode (ASM):\n");
+                    string nasmOut = "\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x54\\x58\\x50\\x5c\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x74\\x0C\\x64\\x12\\x2d\\x08\\x04\\x58\\x3B\\x2d\\x0F\\x08\\x44\\x02\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x12\\x4F\\x0B\\x0F\\x2d\\x3E\\x2B\\x04\\x05\\x2d\\x01\\x10\\x06\\x3C\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x24\\x43\\x08\\x03\\x2d\\x71\\x12\\x56\\x01\\x2d\\x26\\x65\\x16\\x01\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x0C\\x0C\\x63\\x35\\x2d\\x02\\x34\\x08\\x13\\x2d\\x03\\x07\\x4D\\x6B\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x4B\\x6A\\x47\\x5B\\x2d\\x30\\x23\\x42\\x2C\\x2d\\x49\\x6D\\x1C\\x04\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x74\\x79\\x1A\\x5F\\x2d\\x22\\x1C\\x10\\x01\\x2d\\x68\\x12\\x08\\x71\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x45\\x1A\\x3D\\x53\\x2d\\x4F\\x50\\x33\\x05\\x2d\\x5D\\x53\\x3D\\x3D\\x50\\x25\\x4a\\x4d\\x4e\\x55\\x25\\x35\\x32\\x31\\x2a\\x2d\\x21\\x3B\\x27\\x76\\x2d\\x73\\x13\\x07\\x26\\x2d\\x06\\x30\\x07\\x64\\x50";
+                        //string.Concat(carvedCode);
+                    ShellcodeDecoder(nasmOut, destEsp);
+                }
+                else
+                {
+                    Console.WriteLine("[+] Carved Shellcode (HEX):\n");
+                    Console.WriteLine(string.Concat(carvedCode).Replace("\\x",""));
+                }
+
             }
+            else
+            {
+                Console.WriteLine("\"" + string.Concat(carvedCode) + "\"");
+            }
+
+
         }
 
         static string ReverseHexString(string hexString)
@@ -197,7 +224,47 @@ namespace ShellcodeCarver
             return ("\\x" + int.Parse(x).ToString("X2"));
         }
 
-        static void CarveEncode(string x, int[] availChars)
+        static void ShellcodeDecoder(string shellcode, string RIP)
+        {
+            string[] hexValues = shellcode.Split("\\x").Skip(1).ToArray();
+
+            byte[] code = hexValues
+              .Select(value => Convert.ToByte(value, 16))
+              .ToArray();
+            var codeBytes = code;
+            var codeReader = new ByteArrayCodeReader(codeBytes);
+            var decoder = Iced.Intel.Decoder.Create(32, codeReader);
+            ulong CodeRIP = Convert.ToUInt32(RIP, 16);
+            decoder.IP = CodeRIP;
+
+            ulong endRip = decoder.IP + (uint)codeBytes.Length;
+
+            var instructions = new InstructionList();
+            while (decoder.IP < endRip)
+            {
+                decoder.Decode(out instructions.AllocUninitializedElement());
+            }
+            var formatter = new NasmFormatter();
+            formatter.Options.DigitSeparator = "";
+            formatter.Options.FirstOperandCharIndex = 10;
+            var output = new StringBuilderFormatterOutput();
+            foreach (ref var instr in instructions)
+            {
+                formatter.Format(instr, output);
+                int instrLen = instr.ByteLength;
+                int byteBaseIndex = (int)(instr.IP - CodeRIP);
+                for (int i = 0; i < instrLen; i++)
+                    Console.Write(codeBytes[byteBaseIndex + i].ToString("X2"));
+                int missingBytes = 10 - instrLen;
+                for (int i = 0; i < missingBytes; i++)
+                    Console.Write("  ");
+                Console.Write(" ");
+                Console.WriteLine(output.ToStringAndReset().ToUpper());
+            }
+        }
+
+
+        static string[] CarveEncode(string x, int[] availChars)
         {
             Random rnd = new Random();
             int r;
@@ -352,9 +419,11 @@ namespace ShellcodeCarver
             }
 
             // Write SUB carved shellcode
-            Console.WriteLine("\"\\x2d" + (padAndStrip(b4) + padAndStrip(b3) + padAndStrip(b2) + padAndStrip(b1))+ "\"");
-            Console.WriteLine("\"\\x2d" + (padAndStrip(c4) + padAndStrip(c3) + padAndStrip(c2) + padAndStrip(c1)) + "\"");
-            Console.WriteLine("\"\\x2d" + (padAndStrip(d4) + padAndStrip(d3) + padAndStrip(d2) + padAndStrip(d1)) + "\"");
+            string sub1 = ("\\x2d" + (padAndStrip(b4) + padAndStrip(b3) + padAndStrip(b2) + padAndStrip(b1)));
+            string sub2 = ("\\x2d" + (padAndStrip(c4) + padAndStrip(c3) + padAndStrip(c2) + padAndStrip(c1)));
+            string sub3 = ("\\x2d" + (padAndStrip(d4) + padAndStrip(d3) + padAndStrip(d2) + padAndStrip(d1)));
+            string[] subOutput = { sub1, sub2, sub3 };
+            return subOutput;
         }
     }
 }
