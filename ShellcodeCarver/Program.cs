@@ -56,6 +56,7 @@ namespace ShellcodeCarver
             CommandOption argEspStart = cmdArgs.Option("-e | --esp-start <value>", "Enter ESP address value at start of carved shellcode", CommandOptionType.SingleValue);
             CommandOption argEspEnd = cmdArgs.Option("-d | --esp-end <value>", "Enter stack address value to write carved shellcode (allow for sufficient space for carved shellcode side)", CommandOptionType.SingleValue);
             CommandOption argBadChars = cmdArgs.Option("-b | --bad-chars <value>", "Enter the bad characters withg the hex format separated by spaces, e.g. \"0x00 0x01 0xff\" or \"00 01 ff\"", CommandOptionType.SingleValue);
+            CommandOption argFormat = cmdArgs.Option("-f | --format <value>", "Enable this option to preformat variable as C or P(ython)", CommandOptionType.SingleValue);
             cmdArgs.HelpOption("-? | -h | --help");
             cmdArgs.Execute(args);
 
@@ -86,6 +87,9 @@ namespace ShellcodeCarver
             string startEsp = argEspStart.Value();
             string destEsp = argEspEnd.Value();
 
+            bool formatVar = argFormat.HasValue();
+
+
             // Determine available chars from badchars
             foreach (var b in allChars)
             {
@@ -93,6 +97,30 @@ namespace ShellcodeCarver
                 if (pos < 0)
                 {
                     availableChars.Add(b);
+                }
+            }
+
+            string scLengthStr = sc.Replace("0x", "").Replace("\\x", "").Replace(" ","");
+            int scLength = scLengthStr.Length / 2;
+
+            if (scLength % 4 != 0)
+            {
+                string nops = String.Concat(Enumerable.Repeat("\\x90", (4 - (scLength % 4))));
+                sc = sc + nops;
+                Console.WriteLine("[!] Prepending NOPs to align Shellcode\n");
+            }
+
+            Console.WriteLine("[i] Start ESP: \t\t" + startEsp);
+            Console.WriteLine("[i] Destination ESP: \t" + destEsp);
+            Console.WriteLine("[i] Shellcode: \t\t" + sc + "\n");
+
+            Console.WriteLine("[+] Carved Shellcode:\n");
+
+            if (formatVar)
+            {
+                if (argFormat.Value().ToLower() == "p" || argFormat.Value().ToLower() == "python")
+                {
+                    Console.WriteLine("carvedShellcode = (");
                 }
             }
 
@@ -109,6 +137,7 @@ namespace ShellcodeCarver
             // PUSHPOP
             Console.WriteLine("\"\\x50\\x5c\"");
 
+            
             // Reverse shellcode for Carving values
             string reversedShellcode = ReverseHexString(sc);
             string[] reversedShellcodeList;
@@ -118,7 +147,7 @@ namespace ShellcodeCarver
                 .ToLookup(c => Math.Floor(k++ / partSize))
                 .Select(e => new String(e.ToArray()));
             reversedShellcodeList = output.ToArray();
-
+            
             // Loop through each 4 bytes of reversed shellcode
             foreach (string op in reversedShellcodeList)
             {
@@ -138,6 +167,13 @@ namespace ShellcodeCarver
                 Console.WriteLine("\"\\x50\"");
             }
 
+            if (formatVar)
+            {
+                if (argFormat.Value().ToLower() == "p" || argFormat.Value().ToLower() == "python")
+                {
+                    Console.WriteLine(")");
+                }
+            }
         }
 
         static string ReverseHexString(string hexString)
