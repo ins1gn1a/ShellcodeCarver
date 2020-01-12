@@ -10,10 +10,10 @@ C# Shellcode Carving based off of [WoollyMammoth](https://github.com/ins1gn1a/Wo
 In the root directory use the relevant dotnet `RuntimeIdentifiers` value for x86 or x64:
 ```
 # 32-bit
-dotnet build -r win10-x86
+dotnet build -r win10-x86 -c "Release"
 
 # 64-bit
-dotnet build -r win10-x64
+dotnet build -r win10-x64 -c "Release"
 ```
 
 
