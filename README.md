@@ -16,6 +16,8 @@ dotnet build -r win10-x86 -c "Release"
 dotnet build -r win10-x64 -c "Release"
 ```
 
+## Releases
+Obtain the latest releases for x86 or x64 [here](https://github.com/ins1gn1a/ShellcodeCarver/releases/latest).
 
 ## Usage
 
@@ -29,6 +31,9 @@ Options:
   -e | --esp-start <value>  Enter ESP address value at start of carved shellcode
   -d | --esp-end <value>    Enter stack address value to write carved shellcode (allow for sufficient space for carved shellcode side)
   -b | --bad-chars <value>  Enter the bad characters withg the hex format separated by spaces, e.g. "0x00 0x01 0xff" or "00 01 ff"
-  -f | --format <value>     Enable this option to preformat variable as P(ython)
+  -f | --format <value>     Enable this option to format output as P(ython) variable, Assembly (n, a, nasm, or asm), or HEX (no value).
   -? | -h | --help          Show help information
   ```
+  
+  ## Packages
+  [Iced by 0xd4d](https://github.com/0xd4d/iced)
