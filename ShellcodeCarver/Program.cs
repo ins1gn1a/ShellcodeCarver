@@ -1,4 +1,4 @@
-﻿using Iced.Intel;
+using Iced.Intel;
 using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
