@@ -1,5 +1,5 @@
 # ShellcodeCarver
-C# Shellcode Carving tool based off of [WoollyMammoth](https://github.com/ins1gn1a/WoollyMammoth) toolset. Massively quicker to calculate the necessary `SUB` instructions when compared with the Python version.
+C# Shellcode Carving tool based off of [WoollyMammoth](https://github.com/ins1gn1a/WoollyMammoth) toolset. Massively quicker to calculate the necessary `SUB` instructions when compared with the Python version. Operates with both x86 and x64 payloads.
 
 ![](https://img.shields.io/maintenance/yes/2021.svg)
 [![GitHub pull-requests](https://img.shields.io/github/issues-pr/ins1gn1a/ShellcodeCarver.svg)](https://GitHub.com/ins1gn1a/ShellcodeCarver/pulls/)
